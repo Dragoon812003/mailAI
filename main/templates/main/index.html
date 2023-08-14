@@ -1,0 +1,143 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{% static 'img/logo.png' %}">
+    <title>Mail AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <style>
+
+        .loading-transition{
+            transition: width 750ms ease-in-out;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-800">  
+    
+    {% include "main/components/navbar.html" with developers=developers %}
+
+    <div class="max-w-5xl justify-center md:mx-auto mx-4">
+
+        <div id="mail-screen">
+            <h2 class="text-4xl font-bold dark:text-white my-8">Paste an E-Mail here:</h2>
+            <div class="w-full">{% include "main/components/textarea.html" %}</div>
+        </div>
+
+        <div id="loading-screen" class="flex w-full mt-48 items-center hidden">
+            <div class="w-full">
+                <div class="flex justify-between mb-1 align-bottom">
+                    <span id="loading-text" class="text-3xl font-bold mb-4 text-blue-700 dark:text-white">Analyzing your mail...</span>
+                    <div id="loading-value-text" class="text-sm font-medium flex items-end text-blue-700 dark:text-white">10%</div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                    <div id="loading-bar" class="loading-transition bg-blue-600 h-2.5 rounded-full" style="width: 10%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-screen" class="hidden">
+            <h2 id="result-mail-heading" class="text-4xl font-bold text-red-600 my-8"></h2>
+            <div id="result-mail" class="text-md font-normal text-red-500"></div>
+            <button id="try-another-btn" class="flex items-center mx-auto mt-4 px-5 py-2.5 text-sm font-medium text-center text-white bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900 hover:bg-blue-800">Try Another</button>
+        </div>
+    </div>
+    {% include "main/components/footer.html" with year=year names=names %}
+
+    <script>
+    mailForm = document.getElementById("mail-form")
+    mailScreen = document.getElementById('mail-screen')
+    loadingScreen = document.getElementById('loading-screen')
+    loadingValueText = document.getElementById('loading-value-text')
+    loadingText = document.getElementById('loading-text')
+    loadingBar = document.getElementById('loading-bar')
+    resultScreen = document.getElementById('result-screen')
+    resultMail = document.getElementById('result-mail')
+    resultMailHeading = document.getElementById('result-mail-heading')
+    pasteButton = document.getElementById('paste-button')
+    mailTextArea = document.getElementById('mail')
+    tryAnotherBtn = document.getElementById('try-another-btn')
+    
+    function changeWidth(value, text) {
+        loadingValueText.innerText = `${value}%`
+        loadingBar.style.width = `${value}%`
+        loadingText.innerText = text
+    }
+
+    function generateRandom(min, max) {
+        return Math.random() * (max - min) + min
+    }
+
+    function loadResults(result, mail) {
+        loadingScreen.classList.add('hidden')
+        resultScreen.classList.remove('hidden')
+        if (result) {
+            resultMailHeading.innerText = "Your Mail is Safe!"
+            resultMailHeading.classList.remove("text-red-600")
+            resultMail.classList.remove("text-red-500")
+            resultMailHeading.classList.add("text-green-600")
+            resultMail.classList.add("text-green-500")
+        } else {
+            resultMailHeading.innerText = "It's a Spam!"
+            resultMailHeading.classList.remove("text-green-600")
+            resultMail.classList.remove("text-green-500")
+            resultMailHeading.classList.add("text-red-600")
+            resultMail.classList.add("text-red-500")
+        }
+        resultMail.innerText = mail
+    }
+
+    function tryAnother() {
+        mailTextArea.value = ""
+        resultScreen.classList.add('hidden')
+        mailScreen.classList.remove('hidden')
+        changeWidth(10, "Analyzing your mail...")
+    }
+
+    mailForm.addEventListener('submit', (event) => {
+        event.preventDefault()
+
+        mailScreen.classList.add('hidden')
+        loadingScreen.classList.remove('hidden')
+        mail = $('#mail').val()
+
+        $.ajax({
+            url: "{% url 'mail_submit' %}",
+            type: "POST",
+            data: {
+                'mail': $('#mail').val(),
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+
+            success: function (data) {
+                changeWidth(30, "Analyzing your mail...")
+                setTimeout(() => {
+                    changeWidth(50, "Processing email data...")
+                    setTimeout(() => {
+                        changeWidth(70, "Evaluating patterns...")
+                        setTimeout(() => {
+                            changeWidth(99, "Getting Results...")
+                            setTimeout(() => {
+                                loadResults(data.prediction, mail)
+                            }, generateRandom(500, 1000))
+                        }, generateRandom(500, 1500))
+                    }, generateRandom(2000, 3000))
+                }, generateRandom(2500, 4000))
+            }
+        })
+    })
+
+    pasteButton.addEventListener('click', () => {
+        navigator.clipboard.readText().then((clipText) => (mailTextArea.innerText = clipText));
+    })
+
+    tryAnotherBtn.addEventListener('click', tryAnother)
+
+    </script>
+</body>
+</html>

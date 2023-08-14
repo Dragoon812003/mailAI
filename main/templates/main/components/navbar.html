@@ -1,0 +1,73 @@
+<nav class="bg-gray-200 border-gray-200 dark:bg-gray-900">
+    <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+        <a class="flex items-center">
+            <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Mail AI</span>
+        </a>
+        <div class="flex">
+            {% for developer in developers %}
+                <div class="flex items-center mx-2 md:order-2">
+                    <button type="button" class="navbar-pic-btn flex mr-3 text-sm bg-gray-800 rounded-full md:mr-0" id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom">
+                        <span class="sr-only">Open user menu</span>
+                        <img class="w-12 h-12 rounded-full" src="{% url 'serve_developer_profile_pic' developer.timestamp %}" alt="user photo">
+                    </button>
+                    <!-- Dropdown menu -->
+                    <div class="navbar-dropdown -translate-x-3/4 translate-y-3/4 z-50 absolute hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600" id="user-dropdown">
+                        <div class="px-4 py-3">
+                            <span class="block text-sm text-gray-900 dark:text-white">{{ developer.name }}</span>
+                            <span class="block text-sm  text-gray-500 truncate dark:text-gray-400">{{ developer.email }}</span>
+                        </div>
+                        <ul class="py-2" aria-labelledby="user-menu-button">
+                            <li>
+                                <a href="{{ developer.linkedin_link }}</" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">LinkedIn</a>
+                            </li>
+                            <li>
+                                <a href="{{ developer.github_link }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Github</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        <div>
+    </div>
+</nav>
+
+<script>
+navbarPicBtn = document.getElementsByClassName('navbar-pic-btn')
+navbarDropdown = document.getElementsByClassName('navbar-dropdown')
+
+// Assuming you have already defined `navbarPicBtn` and `navbarDropdown` arrays
+
+// Function to hide all dropdowns except for the specified index
+function hideOtherDropdowns(indexToExclude) {
+    for (let j = 0; j < navbarPicBtn.length; j++) {
+        if (j !== indexToExclude) {
+            navbarDropdown[j].classList.add('hidden');
+        }
+    }
+}
+
+// Add click event listeners to each navbarPicBtn
+for (let i = 0; i < navbarPicBtn.length; i++) {
+    navbarPicBtn[i].addEventListener('click', (event) => {
+        event.stopPropagation(); // Prevent click event from reaching document
+        if (navbarDropdown[i].classList.contains('hidden')) {
+            hideOtherDropdowns(i);
+            navbarDropdown[i].classList.remove('hidden');
+        } else {
+            navbarDropdown[i].classList.add('hidden');
+        }
+    });
+    
+    // Add click event listener to the corresponding dropdown
+    navbarDropdown[i].addEventListener('click', (event) => {
+        event.stopPropagation(); // Prevent click event from propagating to document
+    });
+}
+
+// Add a click event listener to the entire document
+document.addEventListener('click', () => {
+    hideOtherDropdowns(-1); // Hide all dropdowns
+});
+
+
+</script>
